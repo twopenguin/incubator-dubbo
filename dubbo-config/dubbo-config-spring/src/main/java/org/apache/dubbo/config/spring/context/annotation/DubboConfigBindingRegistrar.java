@@ -49,7 +49,7 @@ import static org.springframework.beans.factory.support.BeanDefinitionReaderUtil
 /**
  * {@link AbstractConfig Dubbo Config} binding Bean registrar
  *
- * @see EnableDubboConfigBinding
+ * @see EnableDubboConfigBinding 此为一注解
  * @see DubboConfigBindingBeanPostProcessor
  * @since 2.5.8
  */
@@ -85,7 +85,7 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
                                           Class<? extends AbstractConfig> configClass,
                                           boolean multiple,
                                           BeanDefinitionRegistry registry) {
-
+        // <1.1> 获得 prefix 开头的配置属性 比如 dubbo.application
         Map<String, Object> properties = getSubProperties(environment.getPropertySources(), prefix);
 
         if (CollectionUtils.isEmpty(properties)) {
@@ -95,14 +95,14 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
             }
             return;
         }
-
+        // <2> 获得配置属性对应的 Bean 名字的集合
         Set<String> beanNames = multiple ? resolveMultipleBeanNames(properties) :
                 Collections.singleton(resolveSingleBeanName(properties, configClass, registry));
-
+        // <3> 遍历 beanNames 数组，逐个注册
         for (String beanName : beanNames) {
-
+            // <3.1> 注注册 Dubbo Config Bean 对象，这儿只是简单的创建，具体的赋值 看下面
             registerDubboConfigBean(beanName, configClass, registry);
-
+            // <3.2> 注注册 Dubbo Config 对象对应的 DubboConfigBindingBeanPostProcessor 对象， 具体的赋值 在这里
             registerDubboConfigBindingBeanPostProcessor(prefix, beanName, multiple, registry);
 
         }
@@ -181,9 +181,10 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
     private String resolveSingleBeanName(Map<String, Object> properties, Class<? extends AbstractConfig> configClass,
                                          BeanDefinitionRegistry registry) {
-
+        // 如果有id 直接使用id 的值作为beanName
         String beanName = (String) properties.get("id");
 
+        //// 如果没有定义id，基于 Spring 提供的机制，生成对应的 Bean 的名字。例如说：org.apache.dubbo.config.ApplicationConfig#0
         if (!StringUtils.hasText(beanName)) {
             BeanDefinitionBuilder builder = rootBeanDefinition(configClass);
             beanName = BeanDefinitionReaderUtils.generateBeanName(builder.getRawBeanDefinition(), registry);

@@ -72,12 +72,25 @@ public class ExtensionLoader<T> {
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
 
+    /**
+     * 拓展加载器集合
+     * Key:拓展接口 比如：com.alibaba.dubbo.rpc.Protocol
+     */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
 
+    /**
+     * 已经加载的拓展实现类集合
+     * Key:拓展接口 比如：com.alibaba.dubbo.rpc.Protocol
+     * Value：拓展接口对应的一个实例，比如 org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol
+     */
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
 
     // ==============================
 
+    /**
+     * 拓展接口 ： 比如 com.alibaba.dubbo.rpc.Protocol
+     * 注意这儿是实例属性了
+     */
     private final Class<?> type;
 
     private final ExtensionFactory objectFactory;

@@ -42,6 +42,12 @@ import org.springframework.core.env.Environment;
 
 public class DubboConfigBindingBeanPostProcessor implements BeanPostProcessor, ApplicationContextAware, InitializingBean {
 
+    /**
+     * 此类实现了 BeanPostProcessor、ApplicationContextAware、InitializingBean 接口
+     * 处理 Dubbo AbstractConfig Bean 的配置属性注入。
+     */
+
+
     private final Log log = LogFactory.getLog(getClass());
 
     /**
