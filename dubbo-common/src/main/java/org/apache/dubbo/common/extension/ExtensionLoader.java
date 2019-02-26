@@ -64,10 +64,19 @@ public class ExtensionLoader<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtensionLoader.class);
 
+    /**
+     * 目录下，Java SPI 的配置目录。算是对 Java SPI 的兼容
+     */
     private static final String SERVICES_DIRECTORY = "META-INF/services/";
 
+    /**
+     * META-INF/dubbo/ 目录下，用于用户自定义的拓展实现
+     */
     private static final String DUBBO_DIRECTORY = "META-INF/dubbo/";
 
+    /**
+     * 此目录下，从名字上可以看出，用于 Dubbo 内部提供的拓展实现
+     */
     private static final String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + "internal/";
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
@@ -671,6 +680,12 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     *
+     * @param extensionClasses
+     * @param dir 目录 比如："META-INF/dubbo/internal/"
+     * @param type 比如："org.apache.dubbo.common.extension.ExtensionFactory"
+     */
     private void loadDirectory(Map<String, Class<?>> extensionClasses, String dir, String type) {
         String fileName = dir + type;
         try {
@@ -684,6 +699,7 @@ public class ExtensionLoader<T> {
             if (urls != null) {
                 while (urls.hasMoreElements()) {
                     java.net.URL resourceURL = urls.nextElement();
+                    //根据接口类型对应的文件名字，加载文件
                     loadResource(extensionClasses, classLoader, resourceURL);
                 }
             }
@@ -697,6 +713,7 @@ public class ExtensionLoader<T> {
         try {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceURL.openStream(), StandardCharsets.UTF_8))) {
                 String line;
+                //逐行遍历 大概每行长这个样子 adaptive=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
                 while ((line = reader.readLine()) != null) {
                     final int ci = line.indexOf('#');
                     if (ci >= 0) {
@@ -706,11 +723,15 @@ public class ExtensionLoader<T> {
                     if (line.length() > 0) {
                         try {
                             String name = null;
+
+                            //以等号 = 分割
                             int i = line.indexOf('=');
                             if (i > 0) {
                                 name = line.substring(0, i).trim();
                                 line = line.substring(i + 1).trim();
                             }
+
+                            //line 就是读取出来的类的全类名
                             if (line.length() > 0) {
                                 loadClass(extensionClasses, resourceURL, Class.forName(line, true, classLoader), name);
                             }
@@ -727,6 +748,14 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 根据 类的 Class 对象来加载类
+     * @param extensionClasses
+     * @param resourceURL
+     * @param clazz
+     * @param name
+     * @throws NoSuchMethodException
+     */
     private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name) throws NoSuchMethodException {
         if (!type.isAssignableFrom(clazz)) {
             throw new IllegalStateException("Error occurred when loading extension class (interface: " +
@@ -746,6 +775,7 @@ public class ExtensionLoader<T> {
                 }
             }
 
+            //使用逗号进行分割，即多个拓展名可以对应同一个拓展实现类。 如 adaptive,xxx=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
             String[] names = NAME_SEPARATOR.split(name);
             if (ArrayUtils.isNotEmpty(names)) {
                 cacheActivateClass(clazz, names[0]);
